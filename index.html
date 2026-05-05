@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="/favicon-Otis.png">
-    <link rel="apple-touch-icon" href="/favicon-Otis.png">
+    <link rel="icon" type="image/png" href="/favicon-otis.png">
+    <link rel="apple-touch-icon" href="/favicon-otis.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>OTIS - Detailer Service Module</title>
@@ -30,11 +30,531 @@
         .otis-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0d0905;z-index:1000;padding:20px;box-sizing:border-box;overflow-y:auto;color:#ff9933;border:4px solid #8b4513}
         .modal-title{font-weight:bold;text-align:center;margin-bottom:20px;text-transform:uppercase;font-size:14px;color:#ff9933}
         .close-modal-btn{background:#8b4513;color:#fff;width:100%;padding:15px;margin-top:20px;border:none;font-weight:bold;cursor:pointer}
+        .share-btn-group{display:flex;gap:10px;margin-top:20px}
+        .share-btn{background:#ff9933;color:#1a0f00;width:50%;padding:12px;border:none;font-weight:bold;cursor:pointer;border-radius:4px;font-family:'Courier New',monospace}
+        .share-btn-sms{background:#25D366;color:#fff}
+        .share-btn-messenger{background:#0084ff;color:#fff}
         .quote-form input,.quote-form select,.quote-form textarea{width:100%;background:#1a0f00;border:1px solid #8b4513;color:#ff9933;padding:10px;margin-bottom:12px;border-radius:4px;font-family:'Courier New',monospace;box-sizing:border-box}
         .quote-label{font-size:9px;text-transform:uppercase;margin-bottom:4px;display:block;color:#8b4513}
-        .screenshot-notice{background:rgba(255,153,51,0.1);border:1px dashed #ff9933;padding:10px;text-align:center;font-size:10px;margin-top:15px}
-        button{background:transparent;border:none}
-        @media (max-width: 480px){.tool-row{gap:5px}.tool-item{width:80px}.clock-btn{width:50px;height:50px}}
+        .modal-logo{width:80px;height:80px;object-fit:contain;display:block;margin:0 auto 15px auto;border-radius:8px;border:1px solid #8b4513;background:rgba(0,0,0,0.3);padding:5px}
+    </style>
+</head>
+<body>
+<div id="otis-terminal-wrapper">
+    <div style="font-size:10px;letter-spacing:2px;">OTIS – DETAILER SERVICE MODULE V3.3</div>
+    <div class="logo-container" id="logoClickZone">
+        <img id="userLogo" src="">
+        <div id="uploadPrompt" style="font-size:12px;color:#8b4513;">TAP TO UPLOAD LOGO</div>
+        <input type="file" id="logoInput" accept="image/*" style="display:none">
+        <img src="https://i.ibb.co/M5ZD7vLv/otisicon.jpg" class="otis-watermark" alt="OTIS">
+    </div>
+    <div class="divider"></div>
+    <div class="quote-zone">
+        <div class="otis-ghost-text">OTIS</div>
+        <div class="tool-item" onclick="toggleModal('quote-modal')">
+            <img src="https://i.ibb.co/pjQZGHPw/quoteicon.jpg" class="clock-btn" alt="Quote">
+            <div class="time-label">NEW QUOTE</div>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="tool-row">
+        <div class="tool-item" onclick="logDetailedJob()">
+            <img src="https://i.ibb.co/gZ8zTH6M/jobinfo2.jpg" class="clock-btn" alt="Job">
+            <div id="job-detail-val" class="time-label">SET JOB</div>
+        </div>
+        <div class="tool-item" onclick="logTime('start')">
+            <img src="https://i.ibb.co/8DRgqQGR/starttime.jpg" class="clock-btn" alt="Start">
+            <div id="start-val" class="time-label">START: --:--</div>
+        </div>
+        <div class="tool-item" onclick="logTime('end')">
+            <img src="https://i.ibb.co/PzVYB0qv/endtime.jpg" class="clock-btn" alt="End">
+            <div id="end-val" class="time-label">END: --:--</div>
+        </div>
+    </div>
+    <div class="tool-row" style="margin-top:15px;">
+        <div class="tool-item" onclick="handleMileage()">
+            <img src="https://i.ibb.co/jPTF0wWB/mileageicon.jpg" class="clock-btn" alt="Mileage">
+            <div id="miles-val" class="time-label">MILES: 0</div>
+        </div>
+        <div class="tool-item" onclick="toggleModal('inspect-modal')">
+            <img src="https://i.ibb.co/QjqnTJc6/inspecticon.jpg" class="clock-btn" alt="Inspect">
+            <div class="time-label">INSPECTION</div>
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div id="dashboard">
+        <div style="text-align:center;font-size:10px;color:#8b4513;margin-bottom:10px;">DAILY PERFORMANCE</div>
+        <div class="metric-line">Hours Logged: <span id="m-hours" class="metric-val">0.0h</span></div>
+        <div class="metric-line">Daily Profit: <span id="m-profit" class="metric-val">$0.00</span></div>
+        <div class="metric-line">Avg Hour Rate: <span id="m-rate" class="metric-val">$0.00/hr</span></div>
+        <div class="metric-line">Miles Traveled: <span id="m-miles" class="metric-val">0 mi</span></div>
+        <div class="metric-line">Daily Expenses: <span id="m-exp" class="metric-val" style="color:#ff4444;">$0.00</span></div>
+        <div class="metric-controls">
+            <div onclick="toggleModal('history-modal')" style="cursor:pointer;text-align:center;border:1px solid #8b4513;padding:5px;border-radius:4px;background:rgba(139,69,19,0.1);">
+                <div style="font-size:8px;color:#ff9933;font-weight:bold;margin-top:2px;">📋 14-DAY LOG</div>
+            </div>
+            <button onclick="resetDay()" style="background:transparent;border:1px solid #ff9933;color:#ff9933;font-size:9px;padding:5px 10px;height:34px;cursor:pointer;">RESET DAY</button>
+        </div>
+    </div>
+    <div class="toolkit-container">
+        <div class="toolkit-title">SYSTEM TOOLKIT</div>
+        <div class="tool-row">
+            <div class="tool-item" onclick="toggleModal('dilution-modal')">
+                <img src="https://i.ibb.co/wrJ0x88k/dilutionico.jpg" class="clock-btn" alt="Dilution">
+                <div class="time-label">MIX RATIO</div>
+            </div>
+            <div class="tool-item" onclick="toggleModal('invoice-modal')">
+                <img src="https://i.ibb.co/B5K30csL/invoiceicon.jpg" class="clock-btn" alt="Invoice">
+                <div class="time-label">INVOICE</div>
+            </div>
+            <div class="tool-item" onclick="toggleModal('expense-modal')">
+                <img src="https://i.ibb.co/RppgRgcb/expenseicon.jpg" class="clock-btn" alt="Expense">
+                <div class="time-label">LOG EXPENSE</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="text-align:center;font-size:9px;font-family:'Courier New',monospace;color:#8b4513;padding:20px 0 10px 0;">OTIS created by Detail Grandma</div>
+
+<!-- MODALS -->
+<div id="quote-modal" class="otis-modal">
+    <div class="modal-title">SERVICE ESTIMATE</div>
+    <img id="quoteModalLogo" class="modal-logo" style="display:none;">
+    <div class="quote-form">
+        <label class="quote-label">Customer Name</label><input type="text" id="quote-name" placeholder="John Doe">
+        <label class="quote-label">Vehicle Info</label><input type="text" id="quote-vehicle" placeholder="2024 Ford F-150">
+        <label class="quote-label">Service Level</label><select id="quote-service"><option>Basic Detail</option><option>Full Interior/Exterior</option><option>Paint Correction</option><option>Ceramic Coating</option></select>
+        <label class="quote-label">Price Quote</label><input type="text" id="quote-price" placeholder="$0.00">
+        <label class="quote-label">Valid Until</label><input type="date" id="quote-date">
+        <label class="quote-label">Notes</label><textarea id="quote-notes" rows="3"></textarea>
+    </div>
+    <div class="share-btn-group">
+        <button class="share-btn share-btn-sms" onclick="shareQuote('sms')">📱 SHARE → TEXT</button>
+        <button class="share-btn share-btn-messenger" onclick="shareQuote('messenger')">💬 SHARE → MESSENGER</button>
+    </div>
+    <button class="close-modal-btn" onclick="toggleModal('quote-modal')">BACK</button>
+</div>
+
+<div id="invoice-modal" class="otis-modal">
+    <div class="modal-title">FINAL INVOICE</div>
+    <img id="invoiceModalLogo" class="modal-logo" style="display:none;">
+    <div class="quote-form">
+        <label class="quote-label">Customer Name</label><input type="text" id="inv-name" placeholder="John Doe">
+        <label class="quote-label">Vehicle Info</label><input type="text" id="inv-vehicle" placeholder="2024 Ford F-150">
+        <label class="quote-label">Total Due</label><input type="text" id="inv-total" placeholder="$0.00">
+        <label class="quote-label">Services Rendered</label><textarea id="inv-services" rows="5"></textarea>
+    </div>
+    <div class="share-btn-group">
+        <button class="share-btn share-btn-sms" onclick="shareInvoice('sms')">📱 SHARE → TEXT</button>
+        <button class="share-btn share-btn-messenger" onclick="shareInvoice('messenger')">💬 SHARE → MESSENGER</button>
+    </div>
+    <button class="close-modal-btn" onclick="toggleModal('invoice-modal')">BACK</button>
+</div>
+
+<div id="expense-modal" class="otis-modal"><div class="modal-title">LOG BUSINESS EXPENSE</div><div class="quote-form"><label class="quote-label">Item/Product Name</label><input type="text" id="exp-desc" placeholder="e.g. Soap, Towels"><label class="quote-label">Amount ($)</label><input type="number" id="exp-amt" placeholder="0.00"><button class="close-modal-btn" onclick="saveExpense()">ADD TO DAILY TOTAL</button></div><button class="close-modal-btn" style="background:#222;border:1px solid #8b4513;" onclick="toggleModal('expense-modal')">CANCEL</button></div>
+<div id="dilution-modal" class="otis-modal"><div class="modal-title">DILUTION CALCULATOR</div><div class="quote-form"><label class="quote-label">Bottle Size (oz)</label><input type="number" id="dil-total" value="32"><label class="quote-label">Ratio (e.g. 4 for 4:1)</label><input type="number" id="dil-ratio" value="4"><div id="dil-result" style="background:#1a0f00;border:1px dashed #ff9933;padding:15px;text-align:center;margin-top:10px;">RESULTS HERE</div></div><button class="close-modal-btn" onclick="toggleModal('dilution-modal')">BACK</button></div>
+<div id="history-modal" class="otis-modal"><div class="modal-title">14-DAY LOG</div><div id="history-log-container"></div><button class="close-modal-btn" onclick="toggleModal('history-modal')">CLOSE</button></div>
+<div id="inspect-modal" class="otis-modal"><div class="modal-title">INSPECTION</div><div id="check-list-container"></div><button class="close-modal-btn" onclick="toggleModal('inspect-modal')">CLOSE</button></div>
+<div id="license-modal" class="otis-modal"><div class="modal-title">🔑 OTIS LICENSE ACTIVATION</div><div class="quote-form"><label class="quote-label">Enter your personal license key</label><input type="text" id="license-key-input" placeholder="e.g. OTIS-X7K9M" autocomplete="off"><div class="screenshot-notice" style="margin-top:10px;">Your unique key was sent after purchase. Enter it once to unlock OTIS forever.</div></div><button class="close-modal-btn" onclick="activateLicense()">ACTIVATE</button></div>
+
+<script>
+(function() {
+    function isLicensed() {
+        let licensed = localStorage.getItem('otis-licensed');
+        let key = localStorage.getItem('otis-license-key');
+        if (licensed === 'true' && key && key.length >= 4) return true;
+        let savedKey = localStorage.getItem('otis-license-key');
+        if (savedKey && savedKey.length >= 4) {
+            localStorage.setItem('otis-licensed', 'true');
+            return true;
+        }
+        return false;
+    }
+    
+    function showLicenseModal() {
+        let modal = document.getElementById('license-modal');
+        if (modal) modal.style.display = 'block';
+    }
+    
+    window.activateLicense = function() {
+        let input = document.getElementById('license-key-input');
+        let key = input ? input.value.trim() : '';
+        if (key.length >= 4) {
+            localStorage.setItem('otis-license-key', key);
+            localStorage.setItem('otis-licensed', 'true');
+            let modal = document.getElementById('license-modal');
+            if (modal) modal.style.display = 'none';
+            location.reload();
+        } else {
+            alert('Please enter a valid license key (4+ characters)');
+        }
+    };
+    
+    if (!isLicensed()) {
+        showLicenseModal();
+    }
+
+    const load = (k) => localStorage.getItem('otis-' + k);
+    const save = (k, v) => localStorage.setItem('otis-' + k, v);
+    
+    // LOGO
+    const lInput = document.getElementById('logoInput');
+    const uLogo = document.getElementById('userLogo');
+    const uploadDiv = document.getElementById('uploadPrompt');
+    
+    function applyLogo(d) {
+        if (!d) return;
+        uLogo.src = d;
+        uLogo.style.display = 'block';
+        if (uploadDiv) uploadDiv.style.display = 'none';
+        
+        // Also apply logo to modal logos
+        const quoteLogo = document.getElementById('quoteModalLogo');
+        const invoiceLogo = document.getElementById('invoiceModalLogo');
+        if (quoteLogo) {
+            quoteLogo.src = d;
+            quoteLogo.style.display = 'block';
+        }
+        if (invoiceLogo) {
+            invoiceLogo.src = d;
+            invoiceLogo.style.display = 'block';
+        }
+    }
+    
+    const savedLogo = load('user-logo');
+    if (savedLogo) applyLogo(savedLogo);
+    
+    // Function to update modal logos whenever a modal opens
+    window.updateModalLogos = function() {
+        const savedLogoData = load('user-logo');
+        if (savedLogoData) {
+            const quoteLogo = document.getElementById('quoteModalLogo');
+            const invoiceLogo = document.getElementById('invoiceModalLogo');
+            if (quoteLogo && quoteLogo.src !== savedLogoData) {
+                quoteLogo.src = savedLogoData;
+                quoteLogo.style.display = 'block';
+            }
+            if (invoiceLogo && invoiceLogo.src !== savedLogoData) {
+                invoiceLogo.src = savedLogoData;
+                invoiceLogo.style.display = 'block';
+            }
+        }
+    };
+    
+    document.getElementById('logoClickZone')?.addEventListener('click', () => lInput.click());
+    
+    if (lInput) {
+        lInput.onchange = (e) => {
+            const f = e.target.files[0];
+            if (!f) return;
+            if (f.size > 2 * 1024 * 1024) {
+                alert("File too large. Use < 2MB.");
+                return;
+            }
+            const r = new FileReader();
+            r.onload = (ev) => {
+                const d = ev.target.result;
+                save('user-logo', d);
+                applyLogo(d);
+            };
+            r.readAsDataURL(f);
+        };
+    }
+    
+    // SHARE FUNCTIONS
+    window.shareQuote = function(method) {
+        const name = document.getElementById('quote-name')?.value || 'Not specified';
+        const vehicle = document.getElementById('quote-vehicle')?.value || 'Not specified';
+        const service = document.getElementById('quote-service')?.value || 'Not specified';
+        const price = document.getElementById('quote-price')?.value || '$0.00';
+        const validUntil = document.getElementById('quote-date')?.value || 'Not specified';
+        const notes = document.getElementById('quote-notes')?.value || 'None';
+        
+        const message = `🔧 *SERVICE ESTIMATE* 🔧\n\n👤 *Customer:* ${name}\n🚗 *Vehicle:* ${vehicle}\n🛠️ *Service:* ${service}\n💰 *Price:* ${price}\n📅 *Valid until:* ${validUntil}\n📝 *Notes:* ${notes}\n\nThank you for choosing us! 💪`;
+        
+        const encodedMessage = encodeURIComponent(message);
+        
+        if (method === 'sms') {
+            window.location.href = `sms:?body=${encodedMessage}`;
+        } else if (method === 'messenger') {
+            window.open(`https://www.facebook.com/dialog/send?app_id=0&link=&redirect_uri=https://www.facebook.com/&message=${encodedMessage}`, '_blank');
+        }
+    };
+    
+    window.shareInvoice = function(method) {
+        const name = document.getElementById('inv-name')?.value || 'Not specified';
+        const vehicle = document.getElementById('inv-vehicle')?.value || 'Not specified';
+        const total = document.getElementById('inv-total')?.value || '$0.00';
+        const services = document.getElementById('inv-services')?.value || 'Not specified';
+        
+        const message = `🧾 *FINAL INVOICE* 🧾\n\n👤 *Customer:* ${name}\n🚗 *Vehicle:* ${vehicle}\n💰 *Total Due:* ${total}\n🛠️ *Services:* ${services}\n\nThank you for your business! 🙏`;
+        
+        const encodedMessage = encodeURIComponent(message);
+        
+        if (method === 'sms') {
+            window.location.href = `sms:?body=${encodedMessage}`;
+        } else if (method === 'messenger') {
+            window.open(`https://www.facebook.com/dialog/send?app_id=0&link=&redirect_uri=https://www.facebook.com/&message=${encodedMessage}`, '_blank');
+        }
+    };
+    
+    // DILUTION
+    const dTot = document.getElementById('dil-total');
+    const dRat = document.getElementById('dil-ratio');
+    const dRes = document.getElementById('dil-result');
+    
+    function calcDil() {
+        const t = parseFloat(dTot?.value) || 0;
+        const r = parseFloat(dRat?.value) || 0;
+        const c = t / (r + 1);
+        const w = t - c;
+        if(dRes) dRes.innerHTML = `<strong>CHEMICAL:</strong> ${c.toFixed(1)} oz<br><strong>WATER:</strong> ${w.toFixed(1)} oz`;
+    }
+    
+    if (dTot && dRat) {
+        dTot.oninput = calcDil;
+        dRat.oninput = calcDil;
+        calcDil();
+    }
+    
+    function getLog(key) {
+        let raw = localStorage.getItem('otis-log-' + key);
+        if (!raw) return [];
+        try {
+            let logs = JSON.parse(raw);
+            let now = Date.now();
+            let cutoff = now - 14 * 86400000;
+            let filtered = logs.filter(l => l.t > cutoff);
+            if (filtered.length !== logs.length) {
+                localStorage.setItem('otis-log-' + key, JSON.stringify(filtered));
+            }
+            return filtered;
+        } catch(e) { return []; }
+    }
+    
+    function addToLog(key, data) {
+        let logs = getLog(key);
+        logs.push({ t: Date.now(), d: new Date().toLocaleDateString(), ...data });
+        localStorage.setItem('otis-log-' + key, JSON.stringify(logs));
+    }
+    
+    function updateDisplay() {
+        const p = parseFloat(load('daily-profit')) || 0;
+        const h = parseFloat(load('daily-hours')) || 0;
+        const mi = parseInt(load('daily-miles')) || 0;
+        const e = parseFloat(load('daily-expenses')) || 0;
+        
+        const profitEl = document.getElementById('m-profit');
+        const hoursEl = document.getElementById('m-hours');
+        const milesEl = document.getElementById('m-miles');
+        const expEl = document.getElementById('m-exp');
+        const rateEl = document.getElementById('m-rate');
+        const jobValEl = document.getElementById('job-detail-val');
+        const startValEl = document.getElementById('start-val');
+        
+        if(profitEl) profitEl.innerText = "$" + p.toFixed(2);
+        if(hoursEl) hoursEl.innerText = h.toFixed(1) + "h";
+        if(milesEl) milesEl.innerText = mi + " mi";
+        if(expEl) expEl.innerText = "$" + e.toFixed(2);
+        if(rateEl) rateEl.innerText = h > 0 ? "$" + (p / h).toFixed(2) + "/hr" : "$0.00/hr";
+        
+        const v = load('j-vehicle');
+        const pr = load('j-price');
+        if(jobValEl) jobValEl.innerText = v && pr ? v + " | $" + pr : "SET JOB";
+        
+        const sT = load('start-raw');
+        if(startValEl && sT) startValEl.innerText = "START: " + new Date(sT).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        
+        renderFullHistory();
+    }
+    
+    window.toggleModal = function(id) {
+        const m = document.getElementById(id);
+        if (m && id !== 'license-modal') {
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
+            if (m.style.display === 'block') {
+                updateModalLogos();
+            }
+        }
+    };
+    
+    window.logDetailedJob = () => {
+        let v = prompt("Vehicle:");
+        let p = prompt("Price:");
+        if (v && p) {
+            save('j-vehicle', v);
+            save('j-price', p);
+            updateDisplay();
+        }
+    };
+    
+    window.logTime = (type) => {
+        const n = new Date();
+        save(type + '-raw', n.toISOString());
+        if (type === 'end') {
+            setTimeout(() => {
+                if (confirm("Finalize Job?")) finalize();
+            }, 300);
+        }
+        updateDisplay();
+    };
+    
+    window.handleMileage = function() {
+        let s = load('m-start');
+        const lb = document.getElementById('miles-val');
+        if (!s) {
+            let v = prompt("Start Odo:");
+            if (v) {
+                save('m-start', v);
+                if(lb) lb.innerText = "START: " + v;
+            }
+        } else {
+            let v = prompt("End Odo:");
+            if (v) {
+                let t = parseInt(v) - parseInt(s);
+                save('daily-miles', (parseInt(load('daily-miles')) || 0) + t);
+                localStorage.removeItem('otis-m-start');
+                if(lb) lb.innerText = "TRIP: " + t;
+                updateDisplay();
+            }
+        }
+    };
+    
+    window.saveExpense = () => {
+        const a = document.getElementById('exp-amt');
+        const d = document.getElementById('exp-desc');
+        const amt = parseFloat(a?.value) || 0;
+        const desc = d ? d.value : 'Expense';
+        if (amt > 0) {
+            save('daily-expenses', (parseFloat(load('daily-expenses')) || 0) + amt);
+            addToLog('expense', { description: desc, amount: amt });
+            if (d) d.value = '';
+            if (a) a.value = '';
+            toggleModal('expense-modal');
+            updateDisplay();
+        } else { alert("Enter an amount"); }
+    };
+    
+    function finalize() {
+        const p = parseFloat(load('j-price')) || 0;
+        const v = load('j-vehicle') || "Service";
+        const s = load('start-raw');
+        const e = load('end-raw');
+        if (!s || !e) return;
+        
+        const diff = (new Date(e) - new Date(s)) / 3600000;
+        save('daily-profit', (parseFloat(load('daily-profit')) || 0) + p);
+        save('daily-hours', (parseFloat(load('daily-hours')) || 0) + diff);
+        
+        let history = JSON.parse(load('history-data') || "[]");
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            vehicle: v,
+            earned: p,
+            hours: diff.toFixed(1)
+        });
+        save('history-data', JSON.stringify(history.slice(0, 50)));
+        
+        ['j-vehicle', 'j-price', 'start-raw', 'end-raw'].forEach(k => localStorage.removeItem('otis-' + k));
+        const startEl = document.getElementById('start-val');
+        const endEl = document.getElementById('end-val');
+        const jobEl = document.getElementById('job-detail-val');
+        if(startEl) startEl.innerText = "START: --:--";
+        if(endEl) endEl.innerText = "END: --:--";
+        if(jobEl) jobEl.innerText = "SET JOB";
+        updateDisplay();
+    }
+    
+    function renderFullHistory() {
+        const container = document.getElementById('history-log-container');
+        if (!container) return;
+        
+        let jobs = JSON.parse(load('history-data') || "[]");
+        let inspections = getLog('inspection');
+        let expenses = getLog('expense');
+        
+        let html = '<div style="margin-bottom:10px;"><strong>📋 JOBS</strong></div>';
+        jobs.forEach(job => {
+            html += `<div style="border-bottom:1px solid #3d2b1f;padding:6px 0;font-size:11px;">
+                        <div style="color:#8b4513;">${job.date}</div>
+                        <div>${job.vehicle} — $${job.earned} (${job.hours}h)</div>
+                    </div>`;
+        });
+        
+        if (inspections.length) {
+            html += '<div style="margin:12px 0 6px 0;padding-top:8px;border-top:1px solid #8b4513;"><strong>🔍 PRE-EXISTING DAMAGE</strong></div>';
+            inspections.forEach(ins => {
+                let items = ins.checked || [];
+                html += `<div style="border-bottom:1px solid #3d2b1f;padding:6px 0;font-size:11px;">
+                            <div style="color:#8b4513;">${ins.d}</div>
+                            <div style="background:rgba(0,0,0,0.3);padding:5px;margin-top:4px;border-left:2px solid #ff9933;">${items.join(', ') || 'None recorded'}</div>
+                        </div>`;
+            });
+        }
+        
+        if (expenses.length) {
+            html += '<div style="margin:12px 0 6px 0;padding-top:8px;border-top:1px solid #8b4513;"><strong>💰 EXPENSES (14d)</strong></div>';
+            expenses.forEach(exp => {
+                html += `<div style="border-bottom:1px solid #3d2b1f;padding:6px 0;font-size:11px;">
+                            <div style="color:#8b4513;">${exp.d}</div>
+                            <div>${exp.description || 'Expense'} — -$${exp.amount || exp.a}</div>
+                        </div>`;
+            });
+        }
+        
+        if (!jobs.length && !inspections.length && !expenses.length) {
+            html = '<div style="padding:15px;text-align:center;">No logs yet</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    window.resetDay = function() {
+        if (confirm("Reset Totals?")) {
+            ['daily-profit', 'daily-hours', 'daily-miles', 'daily-expenses', 'history-data'].forEach(k => localStorage.removeItem('otis-' + k));
+            location.reload();
+        }
+    };
+    
+    const inspCont = document.getElementById('check-list-container');
+    if (inspCont) {
+        const labs = ["#1 Driver Front", "#2 Driver Cockpit", "#3 Driver Backseat", "#4 Roof", "#5 Driver Rear", "#6 Pass Rear", "#7 Cargo", "#8 Trunk", "#9 Pass Backseat", "#10 Pass Roof", "#11 Pass Cockpit", "#12 Pass Front", "#13 Hood"];
+        inspCont.innerHTML = '';
+        labs.forEach(l => {
+            inspCont.innerHTML += `<div style="margin-bottom:8px;"><input type="checkbox"> ${l}</div>`;
+        });
+    }
+    
+    let origToggle = window.toggleModal;
+    window.toggleModal = function(id) {
+        if (id === 'inspect-modal') {
+            let modal = document.getElementById('inspect-modal');
+            if(modal && modal.style.display === 'block') {
+                let checkboxes = document.querySelectorAll('#check-list-container input[type="checkbox"]');
+                let labels = [];
+                checkboxes.forEach((cb, idx) => {
+                    if (cb.checked) {
+                        let divs = document.querySelectorAll('#check-list-container div');
+                        let labelText = divs[idx] ? divs[idx].innerText.split('\n')[0] : 'Area ' + (idx + 1);
+                        labels.push(labelText);
+                    }
+                });
+                if (labels.length) {
+                    addToLog('inspection', { checked: labels, total: checkboxes.length });
+                }
+            }
+        }
+        origToggle(id);
+        if (id === 'quote-modal' || id === 'invoice-modal') {
+            updateModalLogos();
+        }
+    };
+    
+    updateDisplay();
+})();
+</script>
+</body>
+</html>        @media (max-width: 480px){.tool-row{gap:5px}.tool-item{width:80px}.clock-btn{width:50px;height:50px}}
     </style>
 </head>
 <body>
